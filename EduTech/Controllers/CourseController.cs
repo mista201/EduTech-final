@@ -1,9 +1,11 @@
 ﻿using EduTech.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace EduTech.Controllers
 {
+    [Authorize]
     public class CourseController : Controller
     {
 
@@ -15,50 +17,47 @@ namespace EduTech.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Main()
+        [AllowAnonymous]
+        public async Task<IActionResult> Index()
         {
-
-            ViewData["Title"] = "Main";
             var courses = await dbContext.Courses.AsNoTracking().ToListAsync();
-            return View("Main", courses);
+            return View("Index", courses);
+            
         }
 
         [HttpGet]
+        [Authorize (Policy = "CanManageCourses")]
         public IActionResult Add()
         {
-
-            ViewData["Title"] = "Thêm khóa học";
             return View("Add");
         }
 
-
         [HttpPost]
+        [Authorize (Policy = "IsAdmin")]
         public async Task<IActionResult> Add(AddCourseViewModel viewModel)
         {
             // Kiểm tra xem dữ liệu có hợp lệ không
             if (!ModelState.IsValid)
             {
-
-                ViewData["Title"] = "Thêm khóa học";
                 return View(viewModel);
             }
 
-           
             var course = new Course
             {
-                Name = viewModel.Name,
+                Name = viewModel.Name ?? string.Empty, 
                 Description = viewModel.Description
             };
 
             await dbContext.Courses.AddAsync(course);
             await dbContext.SaveChangesAsync();
 
-            ViewData["Title"] = "Thêm khóa học";
-            return RedirectToAction("Main", "Course");
+            return RedirectToAction("Index", "Course");
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int id) 
+        [Authorize(Policy = "CanManageCourses")]
+
+        public async Task<IActionResult> Edit(int id)
         {
             var course = await dbContext.Courses.FindAsync(id);
             if (course == null)
@@ -74,27 +73,24 @@ namespace EduTech.Controllers
                 Description = course.Description
             };
 
-            ViewData["Title"] = "Thêm khóa học";
-            ViewData["HideFooter"] = true;
-            ViewData["HideHeader"] = true;
             return View(viewModel);
         }
 
+
         [HttpPost]
+        [Authorize(Policy = "CanManageCourses")]
+
         public async Task<IActionResult> Edit(AddCourseViewModel viewModel)
         {
             if (!ModelState.IsValid)
             {
-                ViewData["Title"] = "Sửa khóa học";
-                ViewData["HideFooter"] = true;
-                ViewData["HideHeader"] = true;
                 return View(viewModel);
             }
 
             var course = await dbContext.Courses.FindAsync(viewModel.Id);
             if (course != null)
             {
-                course.Name = viewModel.Name;
+                course.Name = viewModel.Name ?? string.Empty; 
                 course.Description = viewModel.Description;
 
                 await dbContext.SaveChangesAsync();
@@ -104,10 +100,13 @@ namespace EduTech.Controllers
                 return NotFound();
             }
 
-            return RedirectToAction("Main", "Course");
+            return RedirectToAction("Index", "Course");
         }
 
+        
+
         [HttpPost]
+        [Authorize(Policy = "CanManageCourses")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
@@ -123,7 +122,7 @@ namespace EduTech.Controllers
                 return NotFound();
             }
 
-            return RedirectToAction("Main", "Course");
+            return RedirectToAction("Index", "Course");
         }
 
 

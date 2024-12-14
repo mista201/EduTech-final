@@ -22,6 +22,36 @@ namespace EduTech.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ApplicationUserClass", b =>
+                {
+                    b.Property<int>("ClassesTeachingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LecturersId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("ClassesTeachingId", "LecturersId");
+
+                    b.HasIndex("LecturersId");
+
+                    b.ToTable("ClassLecturers", (string)null);
+                });
+
+            modelBuilder.Entity("ApplicationUserClass1", b =>
+                {
+                    b.Property<int>("ClassesAttendingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StudentsId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("ClassesAttendingId", "StudentsId");
+
+                    b.HasIndex("StudentsId");
+
+                    b.ToTable("ClassStudents", (string)null);
+                });
+
             modelBuilder.Entity("EduTech.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -77,6 +107,9 @@ namespace EduTech.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<string>("UserType")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
@@ -88,6 +121,77 @@ namespace EduTech.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("EduTech.Models.Class", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("NumberOfStudents")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RoomNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<double>("Tuition")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("Classes");
+                });
+
+            modelBuilder.Entity("EduTech.Models.ClassSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ClassId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Day")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassId");
+
+                    b.ToTable("ClassSchedules");
                 });
 
             modelBuilder.Entity("EduTech.Models.Course", b =>
@@ -247,6 +351,54 @@ namespace EduTech.Migrations
                     b.ToTable("UserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("ApplicationUserClass", b =>
+                {
+                    b.HasOne("EduTech.Models.Class", null)
+                        .WithMany()
+                        .HasForeignKey("ClassesTeachingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EduTech.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("LecturersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ApplicationUserClass1", b =>
+                {
+                    b.HasOne("EduTech.Models.Class", null)
+                        .WithMany()
+                        .HasForeignKey("ClassesAttendingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EduTech.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("StudentsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EduTech.Models.Class", b =>
+                {
+                    b.HasOne("EduTech.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("EduTech.Models.ClassSchedule", b =>
+                {
+                    b.HasOne("EduTech.Models.Class", null)
+                        .WithMany("ClassSchedules")
+                        .HasForeignKey("ClassId");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -296,6 +448,11 @@ namespace EduTech.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("EduTech.Models.Class", b =>
+                {
+                    b.Navigation("ClassSchedules");
                 });
 #pragma warning restore 612, 618
         }
